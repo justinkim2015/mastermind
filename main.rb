@@ -11,10 +11,34 @@ class Display
     end 
 
     def print_display(number_one, number_two, number_three, number_four)
-        print "---------","---------","---------", "-----------\n"
-        print "-   #{color(number_one)}    -", "-   #{color(number_two)}   -", "-   #{color(number_three)}    -", "-   #{color(number_four)}   -\n"
-        print "---------", "---------", "---------", "-----------\n"
+        print "---------","---------","---------","-----------\n"
+        print "-   #{color(number_one)}    -","-   #{color(number_two)}   -","-   #{color(number_three)}    -","-   #{color(number_four)}   -\n"
+        print "---------","---------","---------","-----------\n"
     end
+
+    # def exact_dot(number)
+    #     if number == 1
+    #         print 'x'
+    #     elsif number == 2 
+    #         print 'xx'
+    #     elsif number == 3
+    #         print 'xxx'
+    #     elsif number == 4
+    #         print 'xxxx'
+    #     end 
+    # end 
+
+    # def matching_dot(number)
+    #     if number == 1
+    #         print 'o'
+    #     elsif number == 2 
+    #         print 'oo'
+    #     elsif number == 3
+    #         print 'ooo'
+    #     elsif number == 4
+    #         print 'oooo'
+    #     end 
+    # end 
 
     def color(number)
         if number == 1
@@ -43,6 +67,7 @@ class PlayGame < Display
         @secret_code_array_i = [@secret_number_one.to_i, @secret_number_two.to_i, @secret_number_three.to_i, @secret_number_four.to_i]
         @secret_code =  (@secret_number_one + @secret_number_two + @secret_number_three + @secret_number_four).to_i
         @round_number = 0
+        @role = ""
     end 
 
     def is_valid_num?(number)
@@ -83,26 +108,46 @@ class PlayGame < Display
         puts "You have #{common_numbers.length - exact_matches} non-exact matches!".green
     end 
 
-    def try_again
-        puts "Play again? (y/n)"
-        y_n = gets.chomp
-        if y_n == 'y'
-            @round_number = 0
-            @secret_number_one = rand(1..6).to_s
-            @secret_number_two = rand(1..6).to_s
-            @secret_number_three = rand(1..6).to_s
-            @secret_number_four = rand(1..6).to_s
-            @secret_code_array_i = [@secret_number_one.to_i, @secret_number_two.to_i, @secret_number_three.to_i, @secret_number_four.to_i]
-            @secret_code =  (@secret_number_one + @secret_number_two + @secret_number_three + @secret_number_four).to_i    
-            play_game
-        elsif y_n == 'n'
-            puts "Thanks for playing!".bold
+    def new_secret_code
+        @secret_number_one = rand(1..6).to_s
+        @secret_number_two = rand(1..6).to_s
+        @secret_number_three = rand(1..6).to_s
+        @secret_number_four = rand(1..6).to_s
+        @secret_code_array_i = [@secret_number_one.to_i, @secret_number_two.to_i, @secret_number_three.to_i, @secret_number_four.to_i]
+        @secret_code =  (@secret_number_one + @secret_number_two + @secret_number_three + @secret_number_four).to_i    
+    end 
+
+    def make_secret_code
+        secret_code_array_s = []
+        until secret_code_array_s.length == 4
+            puts "Please input a code!".bold
+            new_code_array = gets.chomp.split("")   
+            new_code_array.each do |value|
+                if self.is_valid_num?(value.to_i) && new_code_array.length == 4
+                    secret_code_array_s.push(value.to_i)
+                else 
+                    puts "INVALID CODE".red
+                    break
+                end 
+            end 
+        end 
+        @secret_code_array_i = [secret_code_array_s[0].to_i,secret_code_array_s[1].to_i,secret_code_array_s[2].to_i,secret_code_array_s[3].to_i,]
+        @secret_code = @secret_code_array_i.join.to_i
+    end 
+
+    def role
+        puts "Would you like to make the code or guess the code? (make/guess)"
+        role = gets.chomp
+        if role == 'make'
+            @role = 'make'
+        elsif role == 'guess'
+            @role = 'guess'
         else 
-            try_again 
+            self.role 
         end 
     end 
 
-    def play_game 
+    def player_guess
         guess_array = self.guess
         guess = guess_array.join.to_i 
         if @secret_code == guess
@@ -119,9 +164,35 @@ class PlayGame < Display
             puts "Guess again! (The code is #{@secret_code}.)"
             puts "Round #{@round_number}!".bold.underline
             compare_array(guess_array)
-            self.play_game
+            self.player_guess
         end 
     end 
+
+    def play_game 
+        self.role
+        if @role == 'guess'
+            self.player_guess
+        elsif @role == 'make'
+            self.make_secret_code
+        else 
+            self.role
+        end 
+    end 
+
+    def try_again
+        puts "Play again? (y/n)"
+        y_n = gets.chomp
+        if y_n == 'y'
+            @round_number = 0
+            self.new_secret_code
+            play_game
+        elsif y_n == 'n'
+            puts "Thanks for playing!".bold
+        else 
+            try_again 
+        end 
+    end 
+
 end 
 
 class String

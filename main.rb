@@ -12,7 +12,7 @@ class Display
 
     def print_display(number_one, number_two, number_three, number_four)
         print "---------","---------","---------", "-----------\n"
-        print "-   #{number_one}    -", "-   #{number_two}   -", "-   #{number_three}    -", "-   #{number_four}   -\n"
+        print "-   #{color(number_one)}    -", "-   #{color(number_two)}   -", "-   #{color(number_three)}    -", "-   #{color(number_four)}   -\n"
         print "---------", "---------", "---------", "-----------\n"
     end
 
@@ -35,19 +35,17 @@ class Display
 end 
 
 class PlayGame < Display
-    attr_accessor :secret_code, :secret_code_array_i
-
     def initialize 
         @secret_number_one = rand(1..6).to_s
         @secret_number_two = rand(1..6).to_s
         @secret_number_three = rand(1..6).to_s
         @secret_number_four = rand(1..6).to_s
-        @secret_code_array_s = [@secret_number_one, @secret_number_two, @secret_number_three, @secret_number_four]
         @secret_code_array_i = [@secret_number_one.to_i, @secret_number_two.to_i, @secret_number_three.to_i, @secret_number_four.to_i]
         @secret_code =  (@secret_number_one + @secret_number_two + @secret_number_three + @secret_number_four).to_i
         @round_number = 0
     end 
 
+    def is_valid_num?(number)
         if number >= 1 && number <= 6 
             true
         end 
@@ -56,7 +54,7 @@ class PlayGame < Display
     def guess
         final_array = []
         until final_array.length == 4 do
-            puts "Please guess a code!"
+            puts "Please guess a code!".bold
             number_array = gets.chomp.split("") 
             number_array.each do |value|
                 if self.is_valid_num?(value.to_i) && number_array.length == 4 
@@ -75,15 +73,33 @@ class PlayGame < Display
         exact_matches = 0
         matches = 0
         i = 0
-        4.times do 
+        array.each do 
             if @secret_code_array_i[i] == array[i]
-                puts "#{@secret_code_array_i[i]} is an exact match"
                 exact_matches += 1
-                i += 1
             end 
+            i += 1
         end 
-        puts "You have #{exact_matches} exact matches!"
-        puts "You have #{common_numbers.length} numbers correct!"
+        puts "You have #{exact_matches} exact matches!".blue
+        puts "You have #{common_numbers.length - exact_matches} non-exact matches!".green
+    end 
+
+    def try_again
+        puts "Play again? (y/n)"
+        y_n = gets.chomp
+        if y_n == 'y'
+            @round_number = 0
+            @secret_number_one = rand(1..6).to_s
+            @secret_number_two = rand(1..6).to_s
+            @secret_number_three = rand(1..6).to_s
+            @secret_number_four = rand(1..6).to_s
+            @secret_code_array_i = [@secret_number_one.to_i, @secret_number_two.to_i, @secret_number_three.to_i, @secret_number_four.to_i]
+            @secret_code =  (@secret_number_one + @secret_number_two + @secret_number_three + @secret_number_four).to_i    
+            play_game
+        elsif y_n == 'n'
+            puts "Thanks for playing!".bold
+        else 
+            try_again 
+        end 
     end 
 
     def play_game 
@@ -93,12 +109,16 @@ class PlayGame < Display
             @round_number += 1
             self.print_display(guess_array[0],guess_array[1],guess_array[2],guess_array[3])
             puts "You're right it's #{@secret_code}! You got it on round #{@round_number}!!"
+            try_again
+        elsif @round_number == 12
+            puts "Sorry you lose! The code was #{@secret_code}!"
+            try_again
         else 
+            @round_number += 1
             self.print_display(guess_array[0],guess_array[1],guess_array[2],guess_array[3])
             puts "Guess again! (The code is #{@secret_code}.)"
+            puts "Round #{@round_number}!".bold.underline
             compare_array(guess_array)
-            @round_number += 1
-            puts "You guessed #{@round_number} times!"
             self.play_game
         end 
     end 
@@ -134,19 +154,3 @@ code = PlayGame.new
 board = Display.new 
 code.play_game
 
-# code.secret_code = 3116
-# code.secret_code_array_i = [3,1,1,6]
-# array = [3,6,6,1] 
-# array2 = [3,1,1,6]
-# code.compare_array(array)
-#array.select {|6| array2.include?(6)}
-# 3 numbers correct 
-# 1 exact match
-
-# array1=[1,1,1,1]
-# array2=[1,1,1,2]
-
-# array1 = [1,2,2,2]
-# array2 = [1,2,6,9]
-# array3 = []
-# (array1 & array2).flat_map { |n| [n]*[array1.count(n), array2.count(n)].min }

@@ -60,12 +60,8 @@ end
 
 class PlayGame < Display
     def initialize 
-        @secret_number_one = rand(1..6).to_s
-        @secret_number_two = rand(1..6).to_s
-        @secret_number_three = rand(1..6).to_s
-        @secret_number_four = rand(1..6).to_s
-        @secret_code_array_i = [@secret_number_one.to_i, @secret_number_two.to_i, @secret_number_three.to_i, @secret_number_four.to_i]
-        @secret_code =  (@secret_number_one + @secret_number_two + @secret_number_three + @secret_number_four).to_i
+        @secret_code_array = Array.new(4) { rand(1..6) }
+        @secret_code =  @secret_code_array.join.to_i
         @round_number = 0
         @role = ""
     end 
@@ -94,12 +90,12 @@ class PlayGame < Display
     end 
 
     def compare_array(array)
-        common_numbers = (@secret_code_array_i & array).flat_map { |n| [n]*[@secret_code_array_i.count(n), array.count(n)].min }
+        common_numbers = (@secret_code_array & array).flat_map { |n| [n]*[@secret_code_array.count(n), array.count(n)].min }
         exact_matches = 0
         matches = 0
         i = 0
         array.each do 
-            if @secret_code_array_i[i] == array[i]
+            if @secret_code_array[i] == array[i]
                 exact_matches += 1
             end 
             i += 1
@@ -109,12 +105,8 @@ class PlayGame < Display
     end 
 
     def new_secret_code
-        @secret_number_one = rand(1..6).to_s
-        @secret_number_two = rand(1..6).to_s
-        @secret_number_three = rand(1..6).to_s
-        @secret_number_four = rand(1..6).to_s
-        @secret_code_array_i = [@secret_number_one.to_i, @secret_number_two.to_i, @secret_number_three.to_i, @secret_number_four.to_i]
-        @secret_code =  (@secret_number_one + @secret_number_two + @secret_number_three + @secret_number_four).to_i    
+        @secret_code_array = Array.new(4) { rand(1..6) }
+        @secret_code =  @secret_code_array.join.to_i
     end 
 
     def make_secret_code
@@ -131,8 +123,8 @@ class PlayGame < Display
                 end 
             end 
         end 
-        @secret_code_array_i = [secret_code_array_s[0].to_i,secret_code_array_s[1].to_i,secret_code_array_s[2].to_i,secret_code_array_s[3].to_i,]
-        @secret_code = @secret_code_array_i.join.to_i
+        @secret_code_array = [secret_code_array_s[0].to_i,secret_code_array_s[1].to_i,secret_code_array_s[2].to_i,secret_code_array_s[3].to_i,]
+        @secret_code = @secret_code_array.join.to_i
     end 
 
     def role
@@ -164,7 +156,7 @@ class PlayGame < Display
             puts "Guess again! (The code is #{@secret_code}.)"
             puts "Round #{@round_number}!".bold.underline
             compare_array(guess_array)
-            self.player_guess
+            self.player_guess 
         end 
     end 
 
@@ -193,6 +185,27 @@ class PlayGame < Display
         end 
     end 
 
+    def computer_guess 
+        guess_array = Array.new(4) { rand(1..6)}
+        guess = guess_array.join.to_i
+        if @secret_code == guess
+            @round_number += 1
+            self.print_display(guess_array[0],guess_array[1],guess_array[2],guess_array[3])
+            puts "You're right it's #{@secret_code}! You got it on round #{@round_number}!!"
+            try_again
+        elsif @round_number == 12
+            puts "Sorry you lose! The code was #{@secret_code}!"
+            try_again
+        else 
+            @round_number += 1
+            self.print_display(guess_array[0],guess_array[1],guess_array[2],guess_array[3])
+            puts "Guess again! (The code is #{@secret_code}.)"
+            puts "Round #{@round_number}!".bold.underline
+            compare_array(guess_array)
+            self.computer_guess 
+        end 
+    end 
+    
 end 
 
 class String
@@ -223,5 +236,5 @@ end
 
 code = PlayGame.new
 board = Display.new 
-code.play_game
-
+# code.play_game
+code.computer_guess

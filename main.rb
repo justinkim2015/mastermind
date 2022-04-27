@@ -1,19 +1,19 @@
 require 'pry-byebug'
 
+# This class controls the board logic
 class Display
-  def initialize 
-  end
+  def initialize; end
 
   def print_display(number_one, number_two, number_three, number_four)
     print '---------','---------','---------',"-----------\n"
       print "-   #{color(number_one)}    -","-   #{color(number_two)}   -","-   #{color(number_three)}    -","-   #{color(number_four)}   -\n"
-      print '---------','---------','---------','-----------\n'
+      print '---------','---------','---------',"-----------\n"
   end
 
     # def exact_dot(number)
     #     if number == 1
     #         print 'x'
-    #     elsif number == 2 
+    #     elsif number == 2
     #         print 'xx'
     #     elsif number == 3
     #         print 'xxx'
@@ -25,7 +25,7 @@ class Display
     # def matching_dot(number)
     #     if number == 1
     #         print 'o'
-    #     elsif number == 2 
+    #     elsif number == 2
     #         print 'oo'
     #     elsif number == 3
     #         print 'ooo'
@@ -35,24 +35,27 @@ class Display
     # end
 
   def color(number)
-    if number == 1
+    case number
+    when 1
       '1'.blue
-    elsif number == 2
+    when 2
       '2'.red
-    elsif number == 3
+    when 3
       '3'.green
-    elsif number == 4
+    when 4
       '4'.brown
-    elsif number == 5
+    when 5
       '5'.magenta
-    elsif number == 6
+    when 6
       '6'.cyan
     end
   end
 end
 
+# This class has the game data variables
 class PlayGame < Display
-  def initialize 
+  def initialize
+    super
     @secret_code_array = Array.new(4) { rand(1..6) }
     @secret_code =  @secret_code_array.join.to_i
     @round_number = 0
@@ -60,25 +63,27 @@ class PlayGame < Display
   end
 
   def valid_num?(number)
-    if number >= 1 && number <= 6
-      true
-    end
+    true if number >= 1 && number <= 6
+  end
+
+  def valid_length(array)
+    true if array.length == 4
   end
 
   def guess
     final_array = []
-      until final_array.length == 4
-        puts 'Please guess a code!'.bold
-        number_array = gets.chomp.split('')
-        number_array.each do |value|
-          if valid_num?(value.to_i) && number_array.length == 4
-            final_array.push(value.to_i)
-          else
-            puts 'INVALID INPUT AGAIN'.red
-            break
-          end
+    until final_array.length == 4
+      puts 'Please guess a code!'.bold
+      number_array = gets.chomp.split('')
+      number_array.each do |value|
+        if valid_num?(value.to_i) && number_array.length == 4
+          final_array.push(value.to_i)
+        else
+          puts 'INVALID INPUT AGAIN'.red
+          break
         end
       end
+    end
     final_array
   end
 
@@ -103,11 +108,11 @@ class PlayGame < Display
 
   def make_secret_code
     secret_code_array_s = []
-    until secret_code_array_s.length == 4
+    until valid_length(secret_code_array_s)
       puts 'Please input a code!'.bold
       new_code_array = gets.chomp.split('')
       new_code_array.each do |value|
-        if valid_num?(value.to_i) && new_code_array.length == 4
+        if valid_num?(value.to_i) && valid_length(new_code_array)
           secret_code_array_s.push(value.to_i)
         else
           puts 'INVALID CODE'.red
@@ -115,49 +120,100 @@ class PlayGame < Display
         end
       end
     end
-    @secret_code_array = [secret_code_array_s[0].to_i,secret_code_array_s[1].to_i,secret_code_array_s[2].to_i, secret_code_array_s[3].to_i,]
-    @secret_code = @secret_code_array.join.to_i
+    change_secret_code(secret_code_array_s)
+  end
+
+  def change_secret_code(array)
+    @secret_code_array = array
+    @secret_code = array.join.to_i
+  end
+
+  def array_to_i(array)
+    array_i = []
+    array.each do |value|
+      array_i.push(value.to_i)
+    end
+    array_i
   end
 
   def role
     puts 'Would you like to make the code or guess the code? (make/guess)'
     role = gets.chomp
-    if role == 'make'
+    case role
+    when 'make'
       @role = 'make'
-    elsif role == 'guess'
+    when 'guess'
       @role = 'guess'
     else
       self.role
     end
   end
 
-  def player_guess
-    guess_array = guess
-    guess = guess_array.join.to_i
-    if @secret_code == guess
-      @round_number += 1
-      print_display(guess_array[0], guess_array[1], guess_array[2], guess_array[3])
-      puts "You're right it's #{@secret_code}! You got it on round #{@round_number}!!"
+  def code_correct(code, code_array)
+    return nil unless @secret_code == code
+
+    @round_number += 1
+    print_display(code_array[0], code_array[1], code_array[2], code_array[3])
+    puts "You're right it's #{@secret_code}! You got it on round #{@round_number}!!"
+    try_again
+  end
+
+  def game_over?
+    return nil unless @round_number == 12
+
+    puts "Sorry you lose! The code was #{@secret_code}!"
+    true
+  end
+
+  def code_wrong_player(code, code_array)
+    if game_over?
       try_again
-    elsif @round_number == 12
-      puts "Sorry you lose! The code was #{@secret_code}!"
-      try_again
-    else 
+    elsif @secret_code != code
       @round_number += 1
-      print_display(guess_array[0], guess_array[1], guess_array[2], guess_array[3])
+      print_display(code_array[0], code_array[1], code_array[2], code_array[3])
       puts "Guess again! (The code is #{@secret_code}.)"
       puts "Round #{@round_number}!".bold.underline
-      compare_array(guess_array)
+      compare_array(code_array)
       player_guess
     end
   end
 
+  def code_wrong_computer(code, code_array)
+    if game_over?
+      try_again
+    elsif @secret_code != code
+      @round_number += 1
+      print_display(code_array[0], code_array[1], code_array[2], code_array[3])
+      puts "Guess again! (The code is #{@secret_code}.)"
+      puts "Round #{@round_number}!".bold.underline
+      compare_array(code_array)
+      sleep(0.8)
+      computer_guess
+    end
+  end
+
+  def player_guess
+    guess_array = guess
+    guess = guess_array.join.to_i
+    code_correct(guess, guess_array)
+    code_wrong_player(guess, guess_array)
+  end
+
+  def computer_guess
+    guess_array = Array.new(4) { rand(1..6) }
+    guess = guess_array.join.to_i
+    code_correct(guess, guess_array)
+    code_wrong_computer(guess, guess_array)
+  end
+
   def play_game
     role
-    if @role == 'guess'
+    case @role
+    when 'guess'
       player_guess
-    elsif @role == 'make'
+    when 'make'
       make_secret_code
+      computer_guess
     else
       role
     end
@@ -166,39 +222,15 @@ class PlayGame < Display
   def try_again
     puts 'Play again? (y/n)'
     y_n = gets.chomp
-    if y_n == 'y'
+    case y_n
+    when 'y'
       @round_number = 0
       new_secret_code
       play_game
-    elsif y_n == 'n'
+    when 'n'
       puts 'Thanks for playing!'.bold
     else
       try_again
-    end
-  end
-
-  def computer_guess 
-    final_code = ''
-    final_array = []
-    until final_code == @secret_code
-      guess_array = Array.new(4) { rand(1..6) }
-      guess = guess_array.join.to_i
-      if @secret_code == guess
-        @round_number += 1
-        print_display(guess_array[0], guess_array[1], guess_array[2], guess_array[3])
-        puts "You're right it's #{@secret_code}! You got it on round #{@round_number}!!"
-        try_again
-      elsif @round_number == 12
-        puts "Sorry you lose! The code was #{@secret_code}!"
-        try_again
-      else 
-        @round_number += 1
-        print_display(guess_array[0],guess_array[1],guess_array[2],guess_array[3])
-        puts "Round #{@round_number}!".bold.underline
-        compare_array(guess_array)
-        # sleep(0.8)
-        computer_guess
-      end
     end
   end
 end
@@ -229,7 +261,6 @@ class String
     def reverse_color;  "\e[7m#{self}\e[27m" end
 end
 
-# code = PlayGame.new
-# board = Display.new
-# # code.play_game
+code = PlayGame.new
+code.play_game
 # code.computer_guess
